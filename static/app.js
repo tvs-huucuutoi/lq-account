@@ -46,7 +46,9 @@
       empty.classList.add("hidden");
       content.classList.remove("hidden");
       progress.style.width = "100%";
-      status.textContent = "Hoàn tất • Sẵn sàng tải TXT";
+      status.textContent = data.passwords_visible
+        ? "Hoàn tất • Admin được xem và tải mật khẩu."
+        : "Hoàn tất • Mật khẩu đã được ẩn; chỉ admin đăng nhập mới xem được.";
     } catch (error) {
       status.textContent = error.message;
       progress.style.width = "0%";
