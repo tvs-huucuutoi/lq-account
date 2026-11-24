@@ -128,7 +128,10 @@ def login_post():
         return render_template("login.html", error="Chưa cấu hình ADMIN_PASSWORD trên Render."), 503
 
     username_ok = hmac.compare_digest(username, ADMIN_USERNAME)
-    password_ok = hmac.compare_digest(password, ADMIN_PASSWORD)
+    password_ok = hmac.compare_digest(
+    password.encode("utf-8"),
+    ADMIN_PASSWORD.encode("utf-8")
+)
     if username_ok and password_ok:
         session.clear()
         session["is_admin"] = True
