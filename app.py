@@ -159,6 +159,11 @@ def admin():
         total = conn.execute("SELECT COALESCE(SUM(quantity), 0) AS n FROM generations").fetchone()["n"]
     return render_template("admin.html", rows=rows, total=total)
 
+@app.get("/kiem-tra-du-lieu")
+def safe_file_parser():
+    """Local-only file parser; never receives or stores uploaded file contents."""
+    return render_template("safe_file_parser.html")
+
 @app.get("/health")
 def health():
     return jsonify({"status": "ok"})
