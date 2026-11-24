@@ -92,6 +92,29 @@
         "Báo cáo không chứa nội dung gốc hoặc thông tin đăng nhập."
       ].join("\n");
       reportBox.textContent = reportText;
+
+      // Persist summary metadata only; never send source text or file name.
+      try {
+        const csrfResponse = await fetch("/api/csrf");
+        const csrfData = await csrfResponse.json();
+        const historyResponse = await fetch("/api/parser-history", {
+          method: "POST",
+          headers: {"Content-Type": "application/json", "X-CSRF-Token": csrfData.csrf_token},
+          body: JSON.stringify({
+            file_type: selectedFile.name.toLowerCase().split(".").pop(),
+            total_lines: result.total,
+            valid_lines: result.valid,
+            duplicate_lines: result.duplicates,
+            invalid_lines: result.invalid,
+            blank_lines: result.blank
+          })
+        });
+        if (!historyResponse.ok) throw new Error("Không lưu được lịch sử sử dụng.");
+        status("Hoàn tất. Đã lưu lịch sử thống kê; nội dung file vẫn chỉ xử lý trên thiết bị.");
+      } catch (historyError) {
+        status("Đã kiểm tra file nhưng chưa lưu được lịch sử. " + historyError.message);
+      }
+
       $("safe-copy").disabled = false;
       $("safe-download").disabled = false;
       status("Hoàn tất. Nội dung gốc không được hiển thị hoặc gửi lên máy chủ.");

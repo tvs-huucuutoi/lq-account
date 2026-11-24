@@ -1,5 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Quản trị · LQ Account Tool{% endblock %}
+{% block title %}Quản trị · LQ Account Tool<div class="panel history-panel">
+  <div class="panel-heading"><div><span class="step">04</span><h2>Lịch sử kiểm tra file</h2></div><span class="live-tag">LATEST 100</span></div>
+  <p class="history-description">Tổng lượt kiểm tra: <b>{{ "{:,}".format(parser_total) }}</b>. Chỉ lưu thời gian, loại file và số liệu thống kê; không lưu tên file hoặc nội dung.</p>
+  {% if parser_rows %}
+  <div class="table-wrap"><table><thead><tr><th>#</th><th>Thời gian (UTC)</th><th>File</th><th>Tổng dòng</th><th>Có cấu trúc</th><th>Trùng</th><th>Không hợp lệ</th><th>Dòng trống</th></tr></thead><tbody>
+  {% for row in parser_rows %}<tr><td>{{ row.id }}</td><td>{{ row.created_at[:19].replace("T", " ") }}</td><td>{{ row.file_type|upper }}</td><td>{{ "{:,}".format(row.total_lines) }}</td><td>{{ "{:,}".format(row.valid_lines) }}</td><td>{{ "{:,}".format(row.duplicate_lines) }}</td><td>{{ "{:,}".format(row.invalid_lines) }}</td><td>{{ "{:,}".format(row.blank_lines) }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty-admin">Chưa có lượt kiểm tra file nào.</div>{% endif %}
+</div>
+{% endblock %}
 {% block content %}
 <section class="hero compact-hero">
   <div class="eyebrow"><span class="pulse"></span> ADMIN DASHBOARD</div>
