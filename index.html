@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div class="eyebrow"><span class="pulse"></span> TOOL GENERATOR <span class="eyebrow-sep">/</span> WEB EDITION</div>
+  <h1>Tạo dữ liệu.<br><span>Đơn giản và nhanh.</span></h1>
+  <p class="hero-copy">Sinh chuỗi tài khoản và mật khẩu ngẫu nhiên, tải xuống TXT chỉ với một thao tác.</p>
+</section>
+
+<section class="workspace">
+  <div class="panel config-panel">
+    <div class="panel-heading"><div><span class="step">01</span><h2>Cấu hình tạo dữ liệu</h2></div><span class="live-tag">READY</span></div>
+    <form id="generator-form">
+      <label class="field-label" for="quantity">Số lượng cặp dữ liệu <b id="quantity-value">100</b></label>
+      <input id="quantity" type="range" min="1" max="5000" value="100">
+      <div class="range-labels"><span>1</span><span>5.000</span></div>
+      <div class="two-fields">
+        <div><label class="field-label" for="username-length">Độ dài tài khoản</label><input class="number-input" id="username-length" type="number" min="3" max="32" value="10"></div>
+        <div><label class="field-label" for="password-length">Độ dài mật khẩu</label><input class="number-input" id="password-length" type="number" min="4" max="64" value="12"></div>
+      </div>
+      <div class="format-row"><div><span class="muted-label">ĐỊNH DẠNG ĐẦU RA</span><strong>tk:mk</strong></div><span class="format-icon">TXT</span></div>
+      <button class="primary-button" id="generate-button" type="submit"><span>✦</span> TẠO DỮ LIỆU <span class="button-arrow">→</span></button>
+      <p class="hint">Tối đa 5.000 dòng mỗi lần tạo.</p>
+    </form>
+  </div>
+
+  <div class="panel result-panel">
+    <div class="panel-heading"><div><span class="step">02</span><h2>Kết quả</h2></div><span class="result-count" id="result-count">CHƯA CÓ DỮ LIỆU</span></div>
+    <div class="result-empty" id="empty-state"><div class="empty-icon">↳</div><strong>Chưa có dữ liệu</strong><span>Thiết lập thông số và nhấn “Tạo dữ liệu” để bắt đầu.</span></div>
+    <div class="result-content hidden" id="result-content">
+      <div class="success-line"><span class="success-dot"></span><span id="success-message">Đã tạo xong</span></div>
+      <pre id="result-preview"></pre>
+      <div class="result-actions">
+        <button class="secondary-button" id="copy-button" type="button">Sao chép</button>
+        <button class="download-button" id="download-button" type="button">↓ TẢI FILE TXT</button>
+      </div>
+    </div>
+    <div class="progress-track"><div id="progress-bar"></div></div>
+    <div class="panel-foot"><span id="status-text">Đang chờ thao tác</span><span>OUTPUT: .TXT</span></div>
+  </div>
+</section>
+<section class="notice"><span>i</span><p><b>Lưu ý:</b> Dữ liệu được sinh hoàn toàn ngẫu nhiên, không phải tài khoản Liên Quân thật và không được xác minh đăng nhập.</p></section>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}

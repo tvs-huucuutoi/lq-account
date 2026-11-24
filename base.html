@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>{% block title %}LQ Account Tool{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">LQ</span><span>LQ <b>ACCOUNT TOOL</b><small>DATA GENERATOR</small></span></a>
+    <nav>
+      <a href="{{ url_for('index') }}">Trang chủ</a>
+      {% if is_admin %}
+        <a href="{{ url_for('admin') }}">Quản trị</a>
+        <form method="post" action="{{ url_for('logout') }}" class="inline-form">
+          <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+          <button class="nav-button" type="submit">Đăng xuất</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('login') }}">Quản trị viên</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="page">{% block content %}{% endblock %}</main>
+  <footer> LQ ACCOUNT TOOL <span>•</span> Chỉ tạo dữ liệu ngẫu nhiên phục vụ kiểm thử </footer>
+</body>
+</html>

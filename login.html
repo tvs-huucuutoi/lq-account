@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập quản trị · LQ Account Tool{% endblock %}
+{% block content %}
+<section class="auth-wrap">
+  <div class="panel auth-panel">
+    <div class="auth-icon">⌘</div>
+    <div class="eyebrow centered">RESTRICTED AREA</div>
+    <h1>Quản trị viên</h1>
+    <p class="hero-copy">Đăng nhập để xem lịch sử tạo dữ liệu.</p>
+    {% if error %}<div class="error-box">{{ error }}</div>{% endif %}
+    <form method="post" action="{{ url_for('login_post') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+      <label class="field-label" for="username">Tên đăng nhập</label>
+      <input class="text-input" id="username" name="username" autocomplete="username" required>
+      <label class="field-label" for="password">Mật khẩu</label>
+      <input class="text-input" id="password" name="password" type="password" autocomplete="current-password" required>
+      <button class="primary-button" type="submit">ĐĂNG NHẬP <span class="button-arrow">→</span></button>
+    </form>
+    <a class="back-link" href="{{ url_for('index') }}">← Quay lại trang chủ</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Quản trị · LQ Account Tool{% endblock %}
+{% block content %}
+<section class="hero compact-hero">
+  <div class="eyebrow"><span class="pulse"></span> ADMIN DASHBOARD</div>
+  <h1>Lịch sử <span>hoạt động.</span></h1>
+  <p class="hero-copy">Xin chào, {{ session.admin_name }}. Lịch sử chỉ lưu thông số, không lưu các cặp tài khoản/mật khẩu.</p>
+</section>
+<div class="stats-grid">
+  <div class="panel stat-card"><span class="muted-label">TỔNG DÒNG ĐÃ TẠO</span><strong>{{ "{:,}".format(total) }}</strong></div>
+  <div class="panel stat-card"><span class="muted-label">LƯỢT GẦN ĐÂY HIỂN THỊ</span><strong>{{ rows|length }}</strong></div>
+</div>
+<div class="panel history-panel">
+  <div class="panel-heading"><div><span class="step">03</span><h2>Lịch sử tạo dữ liệu</h2></div><span class="live-tag">LATEST 100</span></div>
+  {% if rows %}
+  <div class="table-wrap"><table><thead><tr><th>#</th><th>Thời gian (UTC)</th><th>Số lượng</th><th>Độ dài TK</th><th>Độ dài MK</th></tr></thead><tbody>
+  {% for row in rows %}<tr><td>{{ row.id }}</td><td>{{ row.created_at[:19].replace("T", " ") }}</td><td>{{ "{:,}".format(row.quantity) }}</td><td>{{ row.username_length }}</td><td>{{ row.password_length }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty-admin">Chưa có lượt tạo dữ liệu nào.</div>{% endif %}
+</div>
+{% endblock %}
