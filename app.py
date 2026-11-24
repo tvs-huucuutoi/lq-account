@@ -37,6 +37,19 @@ def init_db():
                 preview TEXT NOT NULL
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS parser_activity (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                file_type TEXT NOT NULL,
+                total_lines INTEGER NOT NULL,
+                valid_lines INTEGER NOT NULL,
+                duplicate_lines INTEGER NOT NULL,
+                invalid_lines INTEGER NOT NULL,
+                blank_lines INTEGER NOT NULL
+            )
+        """)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_parser_activity_created_at ON parser_activity(created_at)")
 
 init_db()
 
@@ -111,6 +124,44 @@ def generate():
 
     return jsonify({"results": results, "count": len(results)})
 
+@app.post("/api/parser-history")
+def save_parser_history():
+    if not validate_csrf():
+        return jsonify({"error": "Phiên làm việc hết hạn. Hãy tải lại trang."}), 400
+
+    data = request.get_json(silent=True) or {}
+    file_type = str(data.get("file_type", "")).lower()
+    if file_type not in ("txt", "docx"):
+        return jsonify({"error": "Loại file không hợp lệ."}), 400
+
+    try:
+        total_lines = int(data.get("total_lines"))
+        valid_lines = int(data.get("valid_lines"))
+        duplicate_lines = int(data.get("duplicate_lines"))
+        invalid_lines = int(data.get("invalid_lines"))
+        blank_lines = int(data.get("blank_lines"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Số liệu lịch sử không hợp lệ."}), 400
+
+    values = (total_lines, valid_lines, duplicate_lines, invalid_lines, blank_lines)
+    if any(value < 0 or value > 10000000 for value in values):
+        return jsonify({"error": "Số liệu vượt giới hạn cho phép."}), 400
+    if valid_lines + duplicate_lines + invalid_lines + blank_lines > total_lines:
+        return jsonify({"error": "Tổng số dòng phân loại không hợp lệ."}), 400
+
+    created_at = datetime.now(timezone.utc).isoformat()
+    with db() as conn:
+        cursor = conn.execute(
+            """INSERT INTO parser_activity
+               (created_at, file_type, total_lines, valid_lines, duplicate_lines, invalid_lines, blank_lines)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (created_at, file_type, total_lines, valid_lines, duplicate_lines, invalid_lines, blank_lines)
+        )
+        activity_id = cursor.lastrowid
+
+    return jsonify({"ok": True, "id": activity_id})
+
+
 @app.get("/login")
 def login():
     if session.get("is_admin"):
@@ -157,7 +208,14 @@ def admin():
             "FROM generations ORDER BY id DESC LIMIT 100"
         ).fetchall()
         total = conn.execute("SELECT COALESCE(SUM(quantity), 0) AS n FROM generations").fetchone()["n"]
-    return render_template("admin.html", rows=rows, total=total)
+        parser_rows = conn.execute(
+            """SELECT id, created_at, file_type, total_lines, valid_lines,
+                      duplicate_lines, invalid_lines, blank_lines
+               FROM parser_activity ORDER BY id DESC LIMIT 100"""
+        ).fetchall()
+        parser_total = conn.execute("SELECT COUNT(*) AS n FROM parser_activity").fetchone()["n"]
+    return render_template("admin.html", rows=rows, total=total,
+                           parser_rows=parser_rows, parser_total=parser_total)
 
 @app.get("/kiem-tra-du-lieu")
 def safe_file_parser():
