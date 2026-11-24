@@ -122,7 +122,15 @@ def generate():
             (created_at, username_length, password_length, quantity, preview)
         )
 
-    return jsonify({"results": results, "count": len(results)})
+    # Public visitors receive usernames with masked passwords. Only an authenticated
+    # admin receives the generated password values in the API response.
+    if session.get("is_admin"):
+        visible_results = results
+    else:
+        visible_results = [item.split(":", 1)[0] + ":••••••" for item in results]
+
+    return jsonify({"results": visible_results, "count": len(visible_results),
+                    "passwords_visible": bool(session.get("is_admin"))})
 
 @app.post("/api/parser-history")
 def save_parser_history():
