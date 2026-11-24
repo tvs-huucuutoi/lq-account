@@ -38,6 +38,6 @@
     <div class="panel-foot"><span id="status-text">Đang chờ thao tác</span><span>OUTPUT: .TXT</span></div>
   </div>
 </section>
-<section class="notice"><span>i</span><p><b>Lưu ý:</b> Dữ liệu được sinh hoàn toàn ngẫu nhiên, không phải tài khoản Liên Quân thật và không được xác minh đăng nhập.</p></section>
+<section class="notice"><span>i</span><p><b>Phân quyền mật khẩu:</b> {% if is_admin %}Bạn đang đăng nhập quản trị viên; mật khẩu được hiển thị và có thể tải xuống.{% else %}Khách truy cập chỉ thấy mật khẩu đã che. Đăng nhập bằng tài khoản quản trị viên để xem mật khẩu.{% endif %} Dữ liệu được sinh ngẫu nhiên, không phải tài khoản Liên Quân thật.</p></section>
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 {% endblock %}
