@@ -1,5 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Quản trị · LQ Account Tool{% endblock %}
+{% block title %}Quản trị · LQ Account Tool<div class="panel history-panel filter-admin-history">
+  <div class="panel-heading"><div><span class="step">04</span><h2>Nhật ký lọc file</h2></div><span class="live-tag">LATEST 100</span></div>
+  <p class="history-description">Tổng cộng {{ filter_total }} lượt lọc. Chỉ quản trị viên mới xem được nhật ký này; nội dung tài khoản/mật khẩu không được lưu.</p>
+  {% if filter_rows %}
+  <div class="table-wrap"><table><thead><tr><th>#</th><th>Thời gian (UTC)</th><th>Tên file</th><th>Đã lọc</th><th>Bỏ qua</th><th>Trạng thái</th></tr></thead><tbody>
+  {% for row in filter_rows %}<tr><td>{{ row.id }}</td><td>{{ row.created_at[:19].replace("T", " ") }}</td><td>{{ row.filename }}</td><td>{{ row.extracted_count }}</td><td>{{ row.skipped_count }}</td><td>{{ "Hoàn tất" if row.status == "success" else "Không có dòng hợp lệ" }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty-admin">Chưa có lượt lọc file nào.</div>{% endif %}
+</div>
+{% endblock %}
 {% block content %}
 <section class="hero compact-hero">
   <div class="eyebrow"><span class="pulse"></span> ADMIN DASHBOARD</div>
