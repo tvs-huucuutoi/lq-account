@@ -14,6 +14,7 @@
     <nav>
       <a href="{{ url_for('index') }}">Trang chủ</a>
       <a href="{{ url_for('filter_page') }}">Lọc file</a>
+      <a href="{{ url_for('check_ban_page') }}">Check Ban</a>
       {% if is_admin %}
         <a href="{{ url_for('admin') }}">Quản trị</a>
         <form method="post" action="{{ url_for('logout') }}" class="inline-form">
