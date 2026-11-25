@@ -27,3 +27,19 @@ footer{border-top:1px solid #ffffff10;text-align:center;padding:20px;color:#5967
 .history-description b{color:#dce7ff}
 
 .secondary-button:disabled,.download-button:disabled{opacity:.45;cursor:not-allowed}
+
+
+.filter-panel{padding:24px;margin-top:18px}
+.filter-intro{font-size:12px;color:var(--muted);line-height:1.7;margin:-12px 0 20px}
+.filter-intro code,.filter-rule code{font-family:ui-monospace,monospace;color:#9dbaff}
+.file-input{display:block;width:100%;padding:13px;background:#0b1323;border:1px dashed #405475;border-radius:10px;color:#aebbd0;font-size:12px}
+.file-input::file-selector-button{background:#243a61;border:0;border-radius:7px;color:#dce8ff;padding:8px 11px;margin-right:12px;cursor:pointer}
+.filter-rule{display:flex;flex-direction:column;gap:7px;padding:14px;background:#0c1526;border:1px solid #26344d;border-radius:10px;margin:17px 0}
+.filter-rule strong{font-size:12px;color:#dce7ff}.filter-rule code{font-size:11px;overflow-wrap:anywhere}
+.filter-panel .primary-button{margin-top:2px}
+.filter-output{margin-top:20px}.filter-summary{font-size:11px;color:#70d9b2;margin-bottom:10px}
+.filter-output pre{max-height:210px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#0a1221;border:1px solid #25334a;border-radius:10px;padding:13px;color:#a8c4ff;font:12px/1.8 ui-monospace,monospace}
+.filter-output .download-button{margin-top:10px}
+.filter-history-panel{margin-top:18px;margin-bottom:50px}
+.filter-history-panel td{overflow-wrap:anywhere}
+@media(max-width:760px){.filter-panel{padding:18px}.filter-history-panel{padding:18px}}
