@@ -13,7 +13,6 @@
     <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">LQ</span><span>LQ <b>ACCOUNT TOOL</b><small>DATA GENERATOR</small></span></a>
     <nav>
       <a href="{{ url_for('index') }}">Trang chủ</a>
-      <a href="{{ url_for('safe_file_parser') }}">Kiểm tra file</a>
       {% if is_admin %}
         <a href="{{ url_for('admin') }}">Quản trị</a>
         <form method="post" action="{{ url_for('logout') }}" class="inline-form">
