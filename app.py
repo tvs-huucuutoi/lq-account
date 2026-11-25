@@ -77,6 +77,10 @@ def index():
 def filter_page():
     return render_template("filter.html")
 
+@app.get("/check-ban")
+def check_ban_page():
+    return render_template("check_ban.html")
+
 @app.get("/api/csrf")
 def api_csrf():
     return jsonify({"csrf_token": csrf_token()})
