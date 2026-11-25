@@ -229,25 +229,35 @@ def filter_file():
 
     extracted = []
     skipped = 0
-    for line in source_text.splitlines():
-        line = line.strip().lstrip("\\ufeff")
+    seen = set()
+    metadata_labels = {
+        "NAME", "RANK", "LEVEL", "TƯỚNG", "TUONG", "SKIN", "QH",
+        "HERO", "BAN", "EMAIL", "SDT", "SĐT", "CMND", "CCCD",
+        "AUTHEN", "FB", "SÒ", "SO", "QUỐC GIA", "LOGIN",
+        "SS", "SSS", "ANIME", "OTHER", "TÌNH TRẠNG", "TRẠNG THÁI",
+        "REGION", "FINAL", "IN", "RESULT"
+    }
+
+    for raw_line in source_text.splitlines():
+        line = raw_line.strip().lstrip("\\ufeff")
         if not line:
             continue
 
-        # Common exports may prefix credentials with "In:", "result =", or
-        # "FINAL =". Remove the label before parsing the credential pair.
+        # A record may start with one of these export labels.
         lowered = line.lower()
         for prefix in ("in:", "result =", "final ="):
             if lowered.startswith(prefix):
                 line = line[len(prefix):].strip()
                 break
 
-        # Credentials are commonly separated by either "|" or ":".
-        # Only inspect the first segment so the descriptive fields after it
-        # (NAME, RANK, SKIN, etc.) are never included in the output.
-        first_segment = line.split("|", 1)[0].strip()
-        if ":" in first_segment:
-            username, password = first_segment.split(":", 1)
+        # Ignore continuation/metadata lines from multi-line account exports.
+        if "|" not in line and ":" not in line:
+            skipped += 1
+            continue
+
+        first_field = line.split("|", 1)[0].strip()
+        if ":" in first_field:
+            username, password = first_field.split(":", 1)
         else:
             fields = line.split("|", 2)
             if len(fields) < 2:
@@ -257,10 +267,30 @@ def filter_file():
 
         username = username.strip()
         password = password.strip()
-        if not username or not password:
+        normalized_user = username.upper()
+
+        # Reject obvious account-detail rows such as "30|QH : 0",
+        # "YES|CMND : NO", and "OTHER|0 []".
+        looks_like_metadata = (
+            normalized_user in metadata_labels
+            or (username.isdigit() and len(username) < 6)
+            or (username.isalpha() and username.isupper())
+        )
+        valid_username = (
+            len(username) >= 3
+            and all(ch.isalnum() or ch in "._-@+" for ch in username)
+            and (any(ch.islower() for ch in username)
+                 or any(ch.isdigit() for ch in username)
+                 or any(ch in "._-@+" for ch in username))
+        )
+        if looks_like_metadata or not valid_username or not password:
             skipped += 1
             continue
-        extracted.append(username + "|" + password)
+
+        pair = username + "|" + password
+        if pair not in seen:
+            extracted.append(pair)
+            seen.add(pair)
 
     status = "success" if extracted else "empty"
     with db() as conn:
