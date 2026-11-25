@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Lọc nội dung từ file · LQ Account Tool{% endblock %}
+{% block content %}
+<section class="hero compact-hero">
+  <div class="eyebrow"><span class="pulse"></span> FILE FILTER <span class="eyebrow-sep">/</span> TXT & DOCX</div>
+  <h1>Lọc nội dung.<br><span>Chính xác và nhanh.</span></h1>
+  <p class="hero-copy">Tải file đầu vào, trích xuất hai trường đầu tiên trên mỗi dòng và tải kết quả về dạng TXT.</p>
+</section>
+<section class="panel filter-panel standalone-filter-panel">
+  <div class="panel-heading">
+    <div><span class="step">01</span><h2>Chọn file đầu vào</h2></div>
+    <span class="live-tag">TXT / DOCX</span>
+  </div>
+  <form id="filter-form">
+    <label class="field-label" for="filter-file">File cần xử lý</label>
+    <input class="file-input" id="filter-file" name="file" type="file" accept=".txt,.docx" required>
+    <div class="filter-rule"><span class="muted-label">QUY TẮC TRÍCH XUẤT</span><strong>Giữ lại hai trường đầu tiên</strong><code>user|pass|thông tin khác → user|pass</code></div>
+    <button class="primary-button" id="filter-button" type="submit">⌕ BẮT ĐẦU LỌC <span class="button-arrow">→</span></button>
+  </form>
+  <div class="filter-output hidden" id="filter-output">
+    <div class="filter-summary" id="filter-summary"></div>
+    <pre id="filter-preview"></pre>
+    <button class="download-button" id="filter-download" type="button">↓ TẢI KẾT QUẢ TXT</button>
+  </div>
+  <div class="panel-foot"><span id="filter-status">Chưa chọn file</span><span>TỐI ĐA 10 MB</span></div>
+</section>
+<section class="filter-help">
+  <span class="muted-label">LƯU Ý</span>
+  <p>Mỗi dòng hợp lệ cần có ít nhất hai trường được ngăn cách bằng dấu <code>|</code>. Nhật ký xử lý chỉ hiển thị trong trang quản trị dành cho admin.</p>
+</section>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}
