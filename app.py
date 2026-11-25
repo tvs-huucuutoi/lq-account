@@ -229,7 +229,6 @@ def filter_file():
 
     extracted = []
     skipped = 0
-    seen = set()
     metadata_labels = {
         "NAME", "RANK", "LEVEL", "TƯỚNG", "TUONG", "SKIN", "QH",
         "HERO", "BAN", "EMAIL", "SDT", "SĐT", "CMND", "CCCD",
@@ -288,9 +287,7 @@ def filter_file():
             continue
 
         pair = username + "|" + password
-        if pair not in seen:
-            extracted.append(pair)
-            seen.add(pair)
+        extracted.append(pair)
 
     status = "success" if extracted else "empty"
     with db() as conn:
