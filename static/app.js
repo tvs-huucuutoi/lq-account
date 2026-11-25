@@ -92,36 +92,8 @@
   const preview = document.getElementById("filter-preview");
   const summary = document.getElementById("filter-summary");
   const status = document.getElementById("filter-status");
-  const historyBody = document.getElementById("filter-history-body");
   const download = document.getElementById("filter-download");
   let filteredLines = [];
-
-  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, ch => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[ch]));
-
-  async function loadHistory() {
-    try {
-      const response = await fetch("/api/filter-history");
-      const data = await response.json();
-      if (!response.ok) throw new Error("Không tải được nhật ký.");
-      if (!data.history.length) {
-        historyBody.innerHTML = '<tr><td colspan="5">Chưa có hoạt động lọc file.</td></tr>';
-        return;
-      }
-      historyBody.innerHTML = data.history.map(item => {
-        const date = new Date(item.created_at);
-        const dateText = Number.isNaN(date.getTime()) ? item.created_at : date.toLocaleString("vi-VN");
-        const state = item.status === "success" ? "Hoàn tất" : "Không có dòng hợp lệ";
-        return '<tr><td>' + escapeHtml(dateText) + '</td><td>' + escapeHtml(item.filename) +
-          '</td><td>' + item.extracted_count.toLocaleString("vi-VN") +
-          '</td><td>' + item.skipped_count.toLocaleString("vi-VN") +
-          '</td><td>' + state + '</td></tr>';
-      }).join("");
-    } catch (error) {
-      historyBody.innerHTML = '<tr><td colspan="5">Không thể tải nhật ký lúc này.</td></tr>';
-    }
-  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -154,7 +126,6 @@
         " dòng • Bỏ qua " + data.skipped.toLocaleString("vi-VN") + " dòng không hợp lệ.";
       output.classList.remove("hidden");
       status.textContent = data.count ? "Lọc hoàn tất." : "Không tìm thấy dòng đúng định dạng.";
-      await loadHistory();
     } catch (error) {
       status.textContent = error.message;
       alert(error.message);
@@ -175,5 +146,4 @@
     URL.revokeObjectURL(url);
   });
 
-  loadHistory();
 })();
