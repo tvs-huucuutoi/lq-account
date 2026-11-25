@@ -43,3 +43,15 @@ footer{border-top:1px solid #ffffff10;text-align:center;padding:20px;color:#5967
 .filter-history-panel{margin-top:18px;margin-bottom:50px}
 .filter-history-panel td{overflow-wrap:anywhere}
 @media(max-width:760px){.filter-panel{padding:18px}.filter-history-panel{padding:18px}}
+
+
+.filter-launch-panel{padding:24px;margin:18px 0 0}
+.filter-launch-panel .hero-copy{margin:-10px 0 20px;max-width:720px}
+.filter-launch-link{display:block;text-align:center;text-decoration:none;margin-top:15px}
+.standalone-filter-panel{max-width:760px;margin:0 auto 22px;padding:28px}
+.filter-help{max-width:760px;margin:0 auto 50px;padding:16px 18px;border:1px solid #26344d;background:#0c1526aa;border-radius:11px}
+.filter-help p{font-size:11px;line-height:1.7;color:#8998b0;margin:8px 0 0}
+.filter-help code{color:#9dbaff;font-family:ui-monospace,monospace}
+.filter-admin-history{margin-top:18px}
+.filter-admin-history td:nth-child(3){overflow-wrap:anywhere;min-width:150px}
+@media(max-width:760px){.standalone-filter-panel{padding:18px}.filter-launch-panel{padding:18px}}
