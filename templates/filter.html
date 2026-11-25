@@ -4,7 +4,7 @@
 <section class="hero compact-hero">
   <div class="eyebrow"><span class="pulse"></span> FILE FILTER <span class="eyebrow-sep">/</span> TXT & DOCX</div>
   <h1>Lọc nội dung.<br><span>Chính xác và nhanh.</span></h1>
-  <p class="hero-copy">Tải file đầu vào, trích xuất hai trường đầu tiên trên mỗi dòng và tải kết quả về dạng TXT.</p>
+  <p class="hero-copy">Tải file đầu vào, chỉ giữ tài khoản và mật khẩu, bỏ toàn bộ thông tin mô tả phía sau và tải kết quả về dạng TXT.</p>
 </section>
 <section class="panel filter-panel standalone-filter-panel">
   <div class="panel-heading">
@@ -26,7 +26,7 @@
 </section>
 <section class="filter-help">
   <span class="muted-label">LƯU Ý</span>
-  <p>Mỗi dòng hợp lệ cần có ít nhất hai trường được ngăn cách bằng dấu <code>|</code>. Nhật ký xử lý chỉ hiển thị trong trang quản trị dành cho admin.</p>
+  <p>Chỉ xuất một cặp <code>tài khoản|mật khẩu</code> cho mỗi tài khoản hợp lệ. Các dòng thông tin phụ như rank, skin, QH, email, CMND, SS/SSS/Anime và những dòng xuống hàng thuộc phần mô tả sẽ không được đưa vào kết quả. Nhật ký xử lý chỉ hiển thị trong trang quản trị dành cho admin.</p>
 </section>
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 {% endblock %}
