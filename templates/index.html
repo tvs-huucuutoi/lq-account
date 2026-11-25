@@ -38,35 +38,13 @@
     <div class="panel-foot"><span id="status-text">Đang chờ thao tác</span><span>OUTPUT: .TXT</span></div>
   </div>
 </section>
-<section class="notice"><span>i</span><p><b>Phân quyền mật khẩu:</b> {% if is_admin %}Bạn đang đăng nhập quản trị viên; mật khẩu được hiển thị và có thể tải xuống.{% else %}Khách truy cập chỉ thấy mật khẩu đã che. Đăng nhập bằng tài khoản quản trị viên để xem mật khẩu.{% endif %} Dữ liệu được sinh ngẫu nhiên, không phải tài khoản Liên Quân thật.</p></section>
+<section class="panel filter-launch-panel">
+  <div class="panel-heading"><div><span class="step">03</span><h2>Công cụ lọc nội dung</h2></div><span class="live-tag">TXT / DOCX</span></div>
+  <p class="hero-copy">Tải file TXT hoặc DOCX, trích xuất hai trường đầu tiên và xuất kết quả thành TXT.</p>
+  <a class="primary-button filter-launch-link" href="{{ url_for('filter_page') }}">MỞ CÔNG CỤ LỌC <span class="button-arrow">→</span></a>
+</section>
 
-<section class="panel filter-panel" id="file-filter">
-  <div class="panel-heading">
-    <div><span class="step">03</span><h2>Lọc nội dung từ file</h2></div>
-    <span class="live-tag">TXT / DOCX</span>
-  </div>
-  <p class="filter-intro">Đọc file và trích xuất hai trường đầu tiên theo định dạng <code>tài_khoản|mật_khẩu</code>. Phần thông tin phía sau sẽ được bỏ qua.</p>
-  <form id="filter-form">
-    <label class="field-label" for="filter-file">Chọn file đầu vào</label>
-    <input class="file-input" id="filter-file" name="file" type="file" accept=".txt,.docx" required>
-    <div class="filter-rule"><span class="muted-label">QUY TẮC LỌC</span><strong>Lấy 2 phần trước dấu | thứ hai</strong><code>user|pass|thông tin khác → user|pass</code></div>
-    <button class="primary-button" id="filter-button" type="submit">⌕ LỌC NỘI DUNG <span class="button-arrow">→</span></button>
-  </form>
-  <div class="filter-output hidden" id="filter-output">
-    <div class="filter-summary" id="filter-summary"></div>
-    <pre id="filter-preview"></pre>
-    <button class="download-button" id="filter-download" type="button">↓ TẢI KẾT QUẢ TXT</button>
-  </div>
-  <div class="panel-foot"><span id="filter-status">Chưa chọn file</span><span>TỐI ĐA 10 MB</span></div>
-</section>
-<section class="panel history-panel filter-history-panel">
-  <div class="panel-heading"><div><span class="step">04</span><h2>Nhật ký lọc file</h2></div><span class="result-count">30 LẦN GẦN NHẤT</span></div>
-  <p class="history-description">Lưu thời gian, tên file và số dòng xử lý; không lưu nội dung tài khoản/mật khẩu đã trích xuất.</p>
-  <div class="table-wrap">
-    <table><thead><tr><th>THỜI GIAN</th><th>TÊN FILE</th><th>ĐÃ LỌC</th><th>BỎ QUA</th><th>TRẠNG THÁI</th></tr></thead>
-    <tbody id="filter-history-body"><tr><td colspan="5">Chưa có hoạt động lọc file.</td></tr></tbody></table>
-  </div>
-</section>
+<section class="notice"><span>i</span><p><b>Phân quyền mật khẩu:</b> {% if is_admin %}Bạn đang đăng nhập quản trị viên; mật khẩu được hiển thị và có thể tải xuống.{% else %}Khách truy cập chỉ thấy mật khẩu đã che. Đăng nhập bằng tài khoản quản trị viên để xem mật khẩu.{% endif %} Dữ liệu được sinh ngẫu nhiên, không phải tài khoản Liên Quân thật.</p></section>
 
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 {% endblock %}
