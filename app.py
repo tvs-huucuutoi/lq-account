@@ -73,6 +73,10 @@ def inject_globals():
 def index():
     return render_template("index.html")
 
+@app.get("/filter")
+def filter_page():
+    return render_template("filter.html")
+
 @app.get("/api/csrf")
 def api_csrf():
     return jsonify({"csrf_token": csrf_token()})
@@ -178,7 +182,12 @@ def admin():
             "FROM generations ORDER BY id DESC LIMIT 100"
         ).fetchall()
         total = conn.execute("SELECT COALESCE(SUM(quantity), 0) AS n FROM generations").fetchone()["n"]
-    return render_template("admin.html", rows=rows, total=total)
+        filter_rows = conn.execute(
+            "SELECT id, created_at, filename, extracted_count, skipped_count, status "
+            "FROM filter_history ORDER BY id DESC LIMIT 100"
+        ).fetchall()
+        filter_total = conn.execute("SELECT COUNT(*) AS n FROM filter_history").fetchone()["n"]
+    return render_template("admin.html", rows=rows, total=total, filter_rows=filter_rows, filter_total=filter_total)
 
 
 @app.post("/api/filter-file")
@@ -247,6 +256,7 @@ def filter_file():
 
 
 @app.get("/api/filter-history")
+@admin_required
 def filter_history():
     with db() as conn:
         rows = conn.execute(
