@@ -4,6 +4,9 @@ import secrets
 import string
 import hmac
 import hashlib
+from io import BytesIO
+from werkzeug.utils import secure_filename
+from docx import Document
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -35,6 +38,16 @@ def init_db():
                 password_length INTEGER NOT NULL,
                 quantity INTEGER NOT NULL,
                 preview TEXT NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS filter_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                filename TEXT NOT NULL,
+                extracted_count INTEGER NOT NULL,
+                skipped_count INTEGER NOT NULL,
+                status TEXT NOT NULL
             )
         """)
 init_db()
@@ -166,6 +179,82 @@ def admin():
         ).fetchall()
         total = conn.execute("SELECT COALESCE(SUM(quantity), 0) AS n FROM generations").fetchone()["n"]
     return render_template("admin.html", rows=rows, total=total)
+
+
+@app.post("/api/filter-file")
+def filter_file():
+    if not validate_csrf():
+        return jsonify({"error": "Phiên làm việc hết hạn. Hãy tải lại trang."}), 400
+
+    uploaded = request.files.get("file")
+    if not uploaded or not uploaded.filename:
+        return jsonify({"error": "Vui lòng chọn file TXT hoặc DOCX."}), 400
+
+    filename = secure_filename(uploaded.filename) or "uploaded-file"
+    extension = os.path.splitext(filename)[1].lower()
+    if extension not in {".txt", ".docx"}:
+        return jsonify({"error": "Chỉ hỗ trợ file .txt và .docx."}), 400
+
+    raw = uploaded.read(10 * 1024 * 1024 + 1)
+    if len(raw) > 10 * 1024 * 1024:
+        return jsonify({"error": "File vượt quá giới hạn 10 MB."}), 413
+
+    try:
+        if extension == ".txt":
+            try:
+                source_text = raw.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                try:
+                    source_text = raw.decode("cp1258")
+                except UnicodeDecodeError:
+                    source_text = raw.decode("latin-1")
+        else:
+            document = Document(BytesIO(raw))
+            text_parts = [p.text for p in document.paragraphs if p.text.strip()]
+            for table in document.tables:
+                for row in table.rows:
+                    text_parts.append(" | ".join(cell.text for cell in row.cells))
+            source_text = "\\n".join(text_parts)
+    except Exception:
+        return jsonify({"error": "Không thể đọc nội dung file. Hãy kiểm tra file DOCX/TXT."}), 400
+
+    extracted = []
+    skipped = 0
+    for line in source_text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        fields = line.split("|", 2)
+        if len(fields) < 2 or not fields[0].strip() or not fields[1].strip():
+            skipped += 1
+            continue
+        extracted.append(fields[0].strip() + "|" + fields[1].strip())
+
+    status = "success" if extracted else "empty"
+    with db() as conn:
+        conn.execute(
+            "INSERT INTO filter_history (created_at, filename, extracted_count, skipped_count, status) VALUES (?, ?, ?, ?, ?)",
+            (datetime.now(timezone.utc).isoformat(), filename, len(extracted), skipped, status)
+        )
+
+    return jsonify({
+        "filename": filename,
+        "results": extracted,
+        "count": len(extracted),
+        "skipped": skipped,
+        "status": status
+    })
+
+
+@app.get("/api/filter-history")
+def filter_history():
+    with db() as conn:
+        rows = conn.execute(
+            "SELECT id, created_at, filename, extracted_count, skipped_count, status "
+            "FROM filter_history ORDER BY id DESC LIMIT 30"
+        ).fetchall()
+    return jsonify({"history": [dict(row) for row in rows]})
+
 
 @app.get("/health")
 def health():
