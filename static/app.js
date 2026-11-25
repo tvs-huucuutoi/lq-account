@@ -120,8 +120,8 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Không thể lọc file.");
       filteredLines = data.results;
-      preview.textContent = filteredLines.slice(0, 15).join("\n") +
-        (filteredLines.length > 15 ? "\n…" : "");
+      preview.textContent = filteredLines.slice(0, 100).join("\n") +
+        (filteredLines.length > 100 ? "\n… (còn " + (filteredLines.length - 100).toLocaleString("vi-VN") + " dòng)" : "");
       summary.textContent = "Đã trích xuất " + data.count.toLocaleString("vi-VN") +
         " dòng • Bỏ qua " + data.skipped.toLocaleString("vi-VN") + " dòng không hợp lệ.";
       output.classList.remove("hidden");
