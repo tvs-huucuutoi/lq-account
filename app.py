@@ -214,7 +214,7 @@ def filter_file():
             for table in document.tables:
                 for row in table.rows:
                     text_parts.append(" | ".join(cell.text for cell in row.cells))
-            source_text = "\\n".join(text_parts)
+            source_text = "\n".join(text_parts)
     except Exception:
         return jsonify({"error": "Không thể đọc nội dung file. Hãy kiểm tra file DOCX/TXT."}), 400
 
