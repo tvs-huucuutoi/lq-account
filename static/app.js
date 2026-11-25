@@ -81,3 +81,99 @@
     }
   });
 })();
+
+
+(() => {
+  const form = document.getElementById("filter-form");
+  if (!form) return;
+  const fileInput = document.getElementById("filter-file");
+  const button = document.getElementById("filter-button");
+  const output = document.getElementById("filter-output");
+  const preview = document.getElementById("filter-preview");
+  const summary = document.getElementById("filter-summary");
+  const status = document.getElementById("filter-status");
+  const historyBody = document.getElementById("filter-history-body");
+  const download = document.getElementById("filter-download");
+  let filteredLines = [];
+
+  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[ch]));
+
+  async function loadHistory() {
+    try {
+      const response = await fetch("/api/filter-history");
+      const data = await response.json();
+      if (!response.ok) throw new Error("Không tải được nhật ký.");
+      if (!data.history.length) {
+        historyBody.innerHTML = '<tr><td colspan="5">Chưa có hoạt động lọc file.</td></tr>';
+        return;
+      }
+      historyBody.innerHTML = data.history.map(item => {
+        const date = new Date(item.created_at);
+        const dateText = Number.isNaN(date.getTime()) ? item.created_at : date.toLocaleString("vi-VN");
+        const state = item.status === "success" ? "Hoàn tất" : "Không có dòng hợp lệ";
+        return '<tr><td>' + escapeHtml(dateText) + '</td><td>' + escapeHtml(item.filename) +
+          '</td><td>' + item.extracted_count.toLocaleString("vi-VN") +
+          '</td><td>' + item.skipped_count.toLocaleString("vi-VN") +
+          '</td><td>' + state + '</td></tr>';
+      }).join("");
+    } catch (error) {
+      historyBody.innerHTML = '<tr><td colspan="5">Không thể tải nhật ký lúc này.</td></tr>';
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (!["txt", "docx"].includes(ext)) {
+      status.textContent = "Chỉ hỗ trợ file TXT hoặc DOCX.";
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "ĐANG ĐỌC VÀ LỌC...";
+    status.textContent = "Đang xử lý file...";
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const csrfResponse = await fetch("/api/csrf");
+      const csrfData = await csrfResponse.json();
+      const response = await fetch("/api/filter-file", {
+        method: "POST",
+        headers: {"X-CSRF-Token": csrfData.csrf_token},
+        body: formData
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Không thể lọc file.");
+      filteredLines = data.results;
+      preview.textContent = filteredLines.slice(0, 15).join("\n") +
+        (filteredLines.length > 15 ? "\n…" : "");
+      summary.textContent = "Đã trích xuất " + data.count.toLocaleString("vi-VN") +
+        " dòng • Bỏ qua " + data.skipped.toLocaleString("vi-VN") + " dòng không hợp lệ.";
+      output.classList.remove("hidden");
+      status.textContent = data.count ? "Lọc hoàn tất." : "Không tìm thấy dòng đúng định dạng.";
+      await loadHistory();
+    } catch (error) {
+      status.textContent = error.message;
+      alert(error.message);
+    } finally {
+      button.disabled = false;
+      button.innerHTML = '⌕ LỌC NỘI DUNG <span class="button-arrow">→</span>';
+    }
+  });
+
+  download.addEventListener("click", () => {
+    if (!filteredLines.length) return;
+    const blob = new Blob(["\\uFEFF" + filteredLines.join("\n") + "\n"], {type: "text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "lq-account-filtered.txt";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  });
+
+  loadHistory();
+})();
