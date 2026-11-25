@@ -230,14 +230,37 @@ def filter_file():
     extracted = []
     skipped = 0
     for line in source_text.splitlines():
-        line = line.strip()
+        line = line.strip().lstrip("\\ufeff")
         if not line:
             continue
-        fields = line.split("|", 2)
-        if len(fields) < 2 or not fields[0].strip() or not fields[1].strip():
+
+        # Common exports may prefix credentials with "In:", "result =", or
+        # "FINAL =". Remove the label before parsing the credential pair.
+        lowered = line.lower()
+        for prefix in ("in:", "result =", "final ="):
+            if lowered.startswith(prefix):
+                line = line[len(prefix):].strip()
+                break
+
+        # Credentials are commonly separated by either "|" or ":".
+        # Only inspect the first segment so the descriptive fields after it
+        # (NAME, RANK, SKIN, etc.) are never included in the output.
+        first_segment = line.split("|", 1)[0].strip()
+        if ":" in first_segment:
+            username, password = first_segment.split(":", 1)
+        else:
+            fields = line.split("|", 2)
+            if len(fields) < 2:
+                skipped += 1
+                continue
+            username, password = fields[0], fields[1]
+
+        username = username.strip()
+        password = password.strip()
+        if not username or not password:
             skipped += 1
             continue
-        extracted.append(fields[0].strip() + "|" + fields[1].strip())
+        extracted.append(username + "|" + password)
 
     status = "success" if extracted else "empty"
     with db() as conn:
