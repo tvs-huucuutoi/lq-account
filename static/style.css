@@ -26,8 +26,4 @@ footer{border-top:1px solid #ffffff10;text-align:center;padding:20px;color:#5967
 .history-description{font-size:11px;color:#8796ae;line-height:1.6;margin:-12px 0 18px}
 .history-description b{color:#dce7ff}
 
-.safe-drop:focus-visible{outline:2px solid #7f9fff;outline-offset:3px}
-.safe-progress{margin-top:14px}
-.safe-progress[hidden]{display:none}
-.safe-progress>div{transition:width .25s ease}
-.safe-clear:disabled,.secondary-button:disabled,.download-button:disabled{opacity:.45;cursor:not-allowed}
+.secondary-button:disabled,.download-button:disabled{opacity:.45;cursor:not-allowed}
