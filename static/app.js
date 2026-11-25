@@ -166,7 +166,7 @@
 
   download.addEventListener("click", () => {
     if (!filteredLines.length) return;
-    const blob = new Blob(["\\uFEFF" + filteredLines.join("\n") + "\n"], {type: "text/plain;charset=utf-8"});
+    const blob = new Blob(["\uFEFF" + filteredLines.join("\n") + "\n"], {type: "text/plain;charset=utf-8"});
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
