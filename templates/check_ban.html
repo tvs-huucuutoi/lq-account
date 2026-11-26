@@ -20,5 +20,14 @@
   <p class="checkban-note">Lưu ý: bước này chỉ kiểm tra định dạng. Chưa có kết nối tra cứu trực tiếp Garena nên mọi dòng được gán <b>khong xac dinh</b>, không đồng nghĩa với không bị khóa. Dữ liệu được xử lý trong trình duyệt, không gửi lên máy chủ.</p>
   <div class="panel-foot"><span id="checkban-message">Sẵn sàng</span><span>KHÔNG GỬI DỮ LIỆU LÊN MÁY CHỦ</span></div>
 </section>
-<script src="{{ url_for('static', filename='check-ban.js') }}"></script>
+  <section class="panel checkban-panel" id="nickname-lookup-panel">
+    <div class="panel-heading"><div><span class="step">02</span><h2>Tra cứu nickname bằng OpenID</h2></div><span class="live-tag">GARENA SHOP</span></div>
+    <p class="hero-copy">Nhập OpenID/ID người chơi để thử lấy nickname công khai. API này không tự tìm OpenID từ tài khoản hoặc mật khẩu.</p>
+    <label class="field-label" for="player-openid">OpenID / ID người chơi</label>
+    <input id="player-openid" class="checkban-textarea" type="text" maxlength="64" placeholder="Ví dụ: 21446817590019185" autocomplete="off">
+    <button class="primary-button" id="player-lookup" type="button">⌕ TRA CỨU NICKNAME <span class="button-arrow">→</span></button>
+    <div id="player-lookup-result" class="checkban-note" aria-live="polite">Chưa thực hiện tra cứu.</div>
+    <p class="checkban-note">Nguồn Garena Shop không phải public API chính thức, có thể thay đổi hoặc giới hạn truy cập. Kết quả nickname không xác nhận trạng thái ban.</p>
+  </section>
+  <script src="{{ url_for('static', filename='check-ban.js') }}"></script>
 {% endblock %}
