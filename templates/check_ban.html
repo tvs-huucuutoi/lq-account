@@ -2,23 +2,23 @@
 {% block title %}Check Ban · LQ Account Tool{% endblock %}
 {% block content %}
 <section class="hero compact-hero">
-  <div class="eyebrow"><span class="pulse"></span> PUBLIC PENALTY CHECK <span class="eyebrow-sep">/</span> PREPARATION</div>
+  <div class="eyebrow"><span class="pulse"></span> PUBLIC PENALTY CHECK <span class="eyebrow-sep">/</span> INPUT PREPARATION</div>
   <h1>Check Ban.<br><span>Chuẩn bị dữ liệu.</span></h1>
-  <p class="hero-copy">Nhập danh sách tài khoản theo định dạng tk|mk, chuẩn hóa dữ liệu và xuất file kết quả. Kết nối tra cứu công khai Garena sẽ được bổ sung ở bước tiếp theo.</p>
+  <p class="hero-copy">Nhập tài khoản theo định dạng tk|mk hoặc tk|mk|nickname. Công cụ hiện chuẩn hóa dữ liệu và xuất kết quả; tra cứu tự động Garena chưa được kết nối.</p>
 </section>
 <section class="panel checkban-panel">
   <div class="panel-heading"><div><span class="step">01</span><h2>Danh sách tài khoản</h2></div><span class="live-tag">TXT / DÁN VĂN BẢN</span></div>
-  <label class="field-label" for="checkban-input">Dán nội dung theo định dạng tk|mk (mỗi tài khoản một dòng)</label>
-  <textarea id="checkban-input" class="checkban-textarea" placeholder="taikhoan1|matkhau1&#10;taikhoan2|matkhau2"></textarea>
+  <label class="field-label" for="checkban-input">Mỗi tài khoản một dòng: tk|mk hoặc tk|mk|nickname</label>
+  <textarea id="checkban-input" class="checkban-textarea" placeholder="taikhoan1|matkhau1|nickname1&#10;taikhoan2|matkhau2"></textarea>
   <div class="checkban-file-row"><input class="file-input" id="checkban-file" type="file" accept=".txt,text/plain"></div>
   <div class="checkban-stats"><span>Hợp lệ: <b id="checkban-valid">0</b></span><span>Dòng lỗi/bỏ qua: <b id="checkban-invalid">0</b></span><span>Trạng thái: <b id="checkban-state">Chưa có dữ liệu</b></span></div>
   <button class="primary-button" id="checkban-prepare" type="button">⌕ KIỂM TRA ĐỊNH DẠNG <span class="button-arrow">→</span></button>
   <div id="checkban-results" class="hidden">
-    <div class="checkban-table-wrap"><table class="checkban-table"><thead><tr><th>#</th><th>Tài khoản</th><th>Kết quả</th></tr></thead><tbody id="checkban-rows"></tbody></table></div>
+    <div class="checkban-table-wrap"><table class="checkban-table"><thead><tr><th>#</th><th>Tài khoản</th><th>Nickname</th><th>Kết quả</th></tr></thead><tbody id="checkban-rows"></tbody></table></div>
     <div class="checkban-actions"><button class="secondary-button" id="checkban-copy" type="button">Sao chép kết quả</button><button class="download-button" id="checkban-download" type="button">↓ XUẤT TXT</button></div>
   </div>
-  <p class="checkban-note">Lưu ý: bản nền hiện tại chỉ kiểm tra định dạng và tạo file. Tất cả tài khoản được gán <b>khong xac dinh</b>; chưa có kết nối tra cứu UID hoặc dữ liệu xử phạt Garena. Nội dung chỉ được xử lý trong trình duyệt và không gửi lên máy chủ.</p>
-  <div class="panel-foot"><span id="checkban-message">Sẵn sàng</span><span>KHÔNG LƯU DỮ LIỆU</span></div>
+  <p class="checkban-note">Lưu ý: bước này chỉ kiểm tra định dạng. Chưa có kết nối tra cứu trực tiếp Garena nên mọi dòng được gán <b>khong xac dinh</b>, không đồng nghĩa với không bị khóa. Dữ liệu được xử lý trong trình duyệt, không gửi lên máy chủ.</p>
+  <div class="panel-foot"><span id="checkban-message">Sẵn sàng</span><span>KHÔNG GỬI DỮ LIỆU LÊN MÁY CHỦ</span></div>
 </section>
 <script src="{{ url_for('static', filename='check-ban.js') }}"></script>
 {% endblock %}
