@@ -86,3 +86,38 @@
     }
   });
 })();
+
+
+// Public nickname lookup by OpenID (Garena Shop provider).
+(() => {
+  const button = document.getElementById("player-lookup");
+  if (!button) return;
+  const input = document.getElementById("player-openid");
+  const result = document.getElementById("player-lookup-result");
+  button.addEventListener("click", async () => {
+    const playerId = input.value.trim();
+    if (!/^[A-Za-z0-9_-]{4,64}$/.test(playerId)) {
+      result.textContent = "OpenID không hợp lệ. Hãy nhập ID từ 4–64 ký tự.";
+      return;
+    }
+    button.disabled = true;
+    result.textContent = "Đang truy vấn Garena Shop…";
+    try {
+      const response = await fetch("/api/player-nickname", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({player_id: playerId})
+      });
+      const data = await response.json();
+      if (!response.ok || !data.found) {
+        result.textContent = data.error || "Không tìm thấy nickname.";
+      } else {
+        result.textContent = "OpenID: " + data.player_id + " · Nickname: " + data.nickname + " · Nguồn: " + data.source;
+      }
+    } catch {
+      result.textContent = "Không thể kết nối máy chủ LQ Account Tool.";
+    } finally {
+      button.disabled = false;
+    }
+  });
+})();
