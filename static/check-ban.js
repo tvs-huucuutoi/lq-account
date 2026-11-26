@@ -33,17 +33,15 @@
       const line = raw.trim();
       if (!line) continue;
       const parts = line.split("|");
-      if (parts.length < 2 || !parts[0].trim() || !parts.slice(1).join("|").trim()) {
+      const username = (parts[0] || "").trim();
+      const password = (parts[1] || "").trim();
+      const nickname = parts.slice(2).join("|").trim();
+      if (parts.length < 2 || !username || !password ||
+          username.length > 200 || password.length > 500 || nickname.length > 200) {
         invalid++;
         continue;
       }
-      const username = parts[0].trim();
-      const password = parts.slice(1).join("|").trim();
-      if (username.length > 200 || password.length > 500) {
-        invalid++;
-        continue;
-      }
-      output.push({username, password, status:"khong xac dinh"});
+      output.push({username, password, nickname, status:"khong xac dinh"});
     }
     validCount.textContent = output.length.toLocaleString("vi-VN");
     invalidCount.textContent = invalid.toLocaleString("vi-VN");
@@ -51,7 +49,7 @@
     rows.replaceChildren();
     output.forEach((item, index) => {
       const tr = document.createElement("tr");
-      for (const value of [String(index + 1), item.username, item.status]) {
+      for (const value of [String(index + 1), item.username, item.nickname || "—", item.status]) {
         const td = document.createElement("td");
         td.textContent = value;
         tr.appendChild(td);
@@ -60,10 +58,14 @@
       rows.appendChild(tr);
     });
     results.classList.toggle("hidden", output.length === 0);
-    message.textContent = "Đã chuẩn hóa " + output.length.toLocaleString("vi-VN") + " tài khoản; chưa tra cứu Garena.";
+    message.textContent = "Đã chuẩn hóa " + output.length.toLocaleString("vi-VN") +
+      " tài khoản; chưa kết nối nguồn tra cứu Garena.";
   });
 
-  const resultText = () => output.map(x => x.username + "|" + x.password + " == " + x.status).join("\n") + (output.length ? "\n" : "");
+  const resultText = () => output.map(x =>
+    x.username + "|" + x.password + (x.nickname ? "|" + x.nickname : "") + " == " + x.status
+  ).join("\n") + (output.length ? "\n" : "");
+
   document.getElementById("checkban-download").addEventListener("click", () => {
     if (!output.length) return;
     const blob = new Blob(["\uFEFF" + resultText()], {type:"text/plain;charset=utf-8"});
