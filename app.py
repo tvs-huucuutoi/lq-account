@@ -81,6 +81,55 @@ def filter_page():
 def check_ban_page():
     return render_template("check_ban.html")
 
+@app.post("/api/player-nickname")
+def player_nickname():
+    """Tra cứu nickname công khai bằng OpenID qua Garena Shop provider."""
+    data = request.get_json(silent=True) or {}
+    player_id = str(data.get("player_id", "")).strip()
+    if not (4 <= len(player_id) <= 64) or not all(ch.isalnum() or ch in "_-" for ch in player_id):
+        return jsonify({"found": False, "error": "OpenID không hợp lệ."}), 400
+
+    # Cùng endpoint/provider Garena Shop được mô tả trong api-check-tklq.
+    # Đây là endpoint không chính thức và có thể thay đổi theo phía Garena.
+    from urllib.parse import urlencode
+    from urllib.request import Request as URLRequest, urlopen
+    import json as json_module
+
+    params = urlencode({"app_id": "100067", "user_id": player_id, "server_id": "0"})
+    url = "https://shop.garena.vn/api/shop/inv_check?" + params
+    req = URLRequest(url, headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "vi-VN,vi;q=0.9,en;q=0.8",
+        "Referer": "https://shop.garena.vn/",
+        "Origin": "https://shop.garena.vn",
+    })
+    try:
+        with urlopen(req, timeout=10) as response:
+            payload = json_module.loads(response.read(1024 * 1024).decode("utf-8"))
+    except Exception:
+        app.logger.exception("Garena Shop nickname lookup failed")
+        return jsonify({"found": False, "error": "Không gọi được nguồn Garena Shop. Có thể nguồn đã đổi hoặc giới hạn truy cập."}), 502
+
+    nickname = None
+    if isinstance(payload, dict):
+        for key in ("nickname", "user_name", "username", "role_name", "name"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                nickname = value.strip()
+                break
+        nested = payload.get("data")
+        if nickname is None and isinstance(nested, dict):
+            for key in ("nickname", "user_name", "username", "role_name", "name"):
+                value = nested.get(key)
+                if isinstance(value, str) and value.strip():
+                    nickname = value.strip()
+                    break
+
+    if not nickname:
+        return jsonify({"found": False, "player_id": player_id, "error": "Nguồn Garena không trả về nickname cho OpenID này."}), 404
+    return jsonify({"found": True, "player_id": player_id, "nickname": nickname, "source": "garena_shop"})
+
 @app.get("/api/csrf")
 def api_csrf():
     return jsonify({"csrf_token": csrf_token()})
