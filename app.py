@@ -442,6 +442,7 @@ def filter_file():
 
 
 @app.post("/api/search-filter")
+@admin_required
 def search_filter():
     if not validate_csrf():
         return jsonify({"error": "Phiên làm việc hết hạn. Hãy tải lại trang."}), 400
