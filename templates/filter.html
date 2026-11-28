@@ -24,30 +24,10 @@
   </div>
   <div class="panel-foot"><span id="filter-status">Chưa chọn file</span><span>TỐI ĐA 10 MB</span></div>
 </section>
-<section class="panel filter-panel standalone-filter-panel keyword-search-panel">
-  <div class="panel-heading">
-    <div><span class="step">02</span><h2>Tìm theo nội dung</h2></div>
-    <span class="live-tag">TÌM KIẾM</span>
-  </div>
-  <p class="filter-intro">Dùng file đã chọn ở mục trên. Nhập từ khóa cần tìm trong các trường SS, SSS hoặc SKIN. Nếu nhập nhiều trường, chỉ cần khớp một trường là tài khoản được lấy (OR).</p>
-  <form id="keyword-search-form">
-    <div class="keyword-fields">
-      <label class="keyword-field"><span>SS</span><input class="text-input" id="keyword-ss" name="ss" type="text" placeholder="Nhập từ khóa SS..."></label>
-      <label class="keyword-field"><span>SSS</span><input class="text-input" id="keyword-sss" name="sss" type="text" placeholder="Nhập từ khóa SSS..."></label>
-      <label class="keyword-field"><span>SKIN</span><input class="text-input" id="keyword-skin" name="skin" type="text" placeholder="Nhập từ khóa SKIN..."></label>
-    </div>
-    <button class="primary-button" id="keyword-search-button" type="submit">⌕ TÌM VÀ LẤY TK|MK <span class="button-arrow">→</span></button>
-  </form>
-  <div class="filter-output hidden" id="keyword-output">
-    <div class="filter-summary" id="keyword-summary"></div>
-    <pre id="keyword-preview"></pre>
-    <button class="download-button" id="keyword-download" type="button">↓ TẢI KẾT QUẢ TXT</button>
-  </div>
-  <div class="panel-foot"><span id="keyword-status">Chưa tìm kiếm</span><span>ĐIỀU KIỆN OR</span></div>
-</section>
+
 <section class="filter-help">
   <span class="muted-label">LƯU Ý</span>
-  <p>Chỉ xuất một cặp <code>tài khoản|mật khẩu</code> cho mỗi tài khoản hợp lệ. Các dòng thông tin phụ như rank, skin, QH, email, CMND, SS/SSS/Anime và những dòng xuống hàng thuộc phần mô tả sẽ không được đưa vào kết quả. Nhật ký xử lý chỉ hiển thị trong trang quản trị dành cho admin.</p>
+  <p>Trang này chỉ trích xuất cặp tài khoản|mật khẩu từ file TXT/DOCX. Để lưu file và tìm kiếm SS, SSS hoặc SKIN, hãy dùng mục <strong>Kho file & tìm kiếm</strong> dành cho quản trị viên.</p>
 </section>
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 {% endblock %}
