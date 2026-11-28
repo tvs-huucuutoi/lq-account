@@ -239,7 +239,7 @@ def filter_file():
     }
 
     for raw_line in source_text.splitlines():
-        line = raw_line.strip().lstrip("\\ufeff")
+        line = raw_line.strip().lstrip("\ufeff")
         if not line:
             continue
 
@@ -360,9 +360,9 @@ def search_filter():
     current = []
 
     def is_account_start(line):
-        candidate = line.strip().lstrip("\\ufeff")
+        candidate = line.strip().lstrip("\ufeff")
         # These export formats explicitly mark the beginning of each record.
-        if re.match(r"(?i)^(?:result|final)\\s*=\\s*[^:\\s|]+:[^\\s|]+", candidate):
+        if re.match(r"(?i)^(?:result|final)\s*=\s*[^:\s|]+:[^\s|]+", candidate):
             return True
 
         has_export_prefix = candidate.lower().startswith("in:")
@@ -431,9 +431,9 @@ def search_filter():
         if not any(found_labels.values()):
             continue
 
-        first = section[0].strip().lstrip("\\ufeff")
+        first = section[0].strip().lstrip("\ufeff")
         # result = user:pass and FINAL = user:pass formats
-        marked = re.match(r"(?i)^(?:result|final)\\s*=\\s*([^:\\s|]+):([^\\s|]+)", first)
+        marked = re.match(r"(?i)^(?:result|final)\s*=\s*([^:\s|]+):([^\s|]+)", first)
         if marked:
             username, password = marked.group(1), marked.group(2)
         else:
