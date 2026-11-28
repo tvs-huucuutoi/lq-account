@@ -360,7 +360,11 @@ def search_filter():
     current = []
 
     def is_account_start(line):
-        candidate = line.strip()
+        candidate = line.strip().lstrip("\\ufeff")
+        # These export formats explicitly mark the beginning of each record.
+        if re.match(r"(?i)^(?:result|final)\\s*=\\s*[^:\\s|]+:[^\\s|]+", candidate):
+            return True
+
         has_export_prefix = candidate.lower().startswith("in:")
         if has_export_prefix:
             candidate = candidate[3:].strip()
@@ -427,13 +431,14 @@ def search_filter():
         if not any(found_labels.values()):
             continue
 
-        first = section[0]
-        if first.lower().startswith("in:"):
-            first = first[3:].strip()
-        first_field = first.split("|", 1)[0].strip()
-        if ":" in first_field:
-            username, password = first_field.split(":", 1)
+        first = section[0].strip().lstrip("\\ufeff")
+        # result = user:pass and FINAL = user:pass formats
+        marked = re.match(r"(?i)^(?:result|final)\\s*=\\s*([^:\\s|]+):([^\\s|]+)", first)
+        if marked:
+            username, password = marked.group(1), marked.group(2)
         else:
+            if first.lower().startswith("in:"):
+                first = first[3:].strip()
             fields = first.split("|", 2)
             if len(fields) < 2:
                 continue
