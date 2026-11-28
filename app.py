@@ -374,24 +374,28 @@ def search_filter():
         labels = {"NAME", "RANK", "LEVEL", "TƯỚNG", "TUONG", "SKIN", "QH",
                   "SS", "SSS", "ANIME", "OTHER", "EMAIL", "SDT", "SĐT",
                   "IN", "RESULT", "FINAL", "AUTHEN", "CCCD", "CMND"}
-        if not user or not password or user.upper() in labels:
+        if not user or not password:
             return False
 
-        # Account IDs are usually lowercase, contain digits, or use ID symbols.
-        # Reject title-case labels/metadata such as "Trang|Acc Full" and
-        # short numeric metadata rows such as "105|Skin: 237".
+        # An explicit "In:" prefix identifies an exported account record.
+        # Trust its first two fields even if the account ID/password uses
+        # uppercase, spaces, or punctuation.
+        if has_export_prefix:
+            return True
+
+        # For unlabelled rows, use conservative checks to avoid treating
+        # descriptive metadata such as "Trang|Acc Full" as credentials.
         valid_user = (
             len(user) >= 3
             and all(ch.isalnum() or ch in "._-@+" for ch in user)
             and (
                 user.islower()
-                or any(ch.isdigit() for ch in user) and (not user.isdigit() or len(user) >= 8)
+                or (any(ch.isdigit() for ch in user) and (not user.isdigit() or len(user) >= 8))
                 or any(ch in "._-@+" for ch in user)
             )
         )
         valid_password = (
-            not any(ch.isspace() for ch in password)
-            and not password.endswith(":")
+            not password.endswith(":")
             and password.split(":", 1)[0].upper() not in labels
         )
         return valid_user and valid_password
