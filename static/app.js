@@ -147,3 +147,78 @@
   });
 
 })();
+
+
+(() => {
+  const form = document.getElementById("keyword-search-form");
+  if (!form) return;
+  const fileInput = document.getElementById("filter-file");
+  const button = document.getElementById("keyword-search-button");
+  const output = document.getElementById("keyword-output");
+  const preview = document.getElementById("keyword-preview");
+  const summary = document.getElementById("keyword-summary");
+  const status = document.getElementById("keyword-status");
+  const download = document.getElementById("keyword-download");
+  let matches = [];
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) {
+      status.textContent = "Hãy chọn file ở mục 01 trước.";
+      return;
+    }
+    const keywords = {
+      ss: document.getElementById("keyword-ss").value.trim(),
+      sss: document.getElementById("keyword-sss").value.trim(),
+      skin: document.getElementById("keyword-skin").value.trim()
+    };
+    if (!keywords.ss && !keywords.sss && !keywords.skin) {
+      status.textContent = "Hãy nhập ít nhất một từ khóa.";
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "ĐANG TÌM KIẾM...";
+    status.textContent = "Đang quét nội dung file...";
+    const formData = new FormData();
+    formData.append("file", file);
+    Object.entries(keywords).forEach(([key, value]) => formData.append(key, value));
+
+    try {
+      const csrfResponse = await fetch("/api/csrf");
+      const csrfData = await csrfResponse.json();
+      const response = await fetch("/api/search-filter", {
+        method: "POST",
+        headers: {"X-CSRF-Token": csrfData.csrf_token},
+        body: formData
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Không thể tìm kiếm file.");
+      matches = data.results || [];
+      preview.textContent = matches.slice(0, 100).join("\n") +
+        (matches.length > 100 ? "\n… (còn " + (matches.length - 100).toLocaleString("vi-VN") + " dòng)" : "");
+      summary.textContent = "Tìm thấy " + data.count.toLocaleString("vi-VN") +
+        " tài khoản khớp • Điều kiện OR.";
+      output.classList.remove("hidden");
+      status.textContent = matches.length ? "Tìm kiếm hoàn tất." : "Không tìm thấy tài khoản khớp.";
+    } catch (error) {
+      status.textContent = error.message;
+      alert(error.message);
+    } finally {
+      button.disabled = false;
+      button.innerHTML = '⌕ TÌM VÀ LẤY TK|MK <span class="button-arrow">→</span>';
+    }
+  });
+
+  download.addEventListener("click", () => {
+    if (!matches.length) return;
+    const blob = new Blob(["\uFEFF" + matches.join("\n") + "\n"], {type: "text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "lq-account-search-results.txt";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  });
+})();
