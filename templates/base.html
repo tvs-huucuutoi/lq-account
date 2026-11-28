@@ -15,6 +15,7 @@
       <a href="{{ url_for('index') }}">Trang chủ</a>
       <a href="{{ url_for('filter_page') }}">Lọc file</a>
       {% if is_admin %}
+        <a href="{{ url_for('keyword_search_page') }}">Kho file & tìm kiếm</a>
         <a href="{{ url_for('admin') }}">Quản trị</a>
         <form method="post" action="{{ url_for('logout') }}" class="inline-form">
           <input type="hidden" name="_csrf" value="{{ csrf_token }}">
