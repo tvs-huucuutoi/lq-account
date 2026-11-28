@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Kho file & tìm kiếm · LQ Account Tool{% endblock %}
+{% block content %}
+<section class="hero compact-hero">
+  <div class="eyebrow"><span class="pulse"></span> PRIVATE FILE LIBRARY <span class="eyebrow-sep">/</span> KEYWORD SEARCH</div>
+  <h1>Kho file <span>& tìm kiếm.</span></h1>
+  <p class="hero-copy">File được lưu lâu dài trong Supabase Storage riêng tư. Bạn có thể tải lên một lần và quay lại tìm SS, SSS hoặc SKIN bất cứ lúc nào.</p>
+</section>
+
+<section class="panel filter-panel standalone-filter-panel">
+  <div class="panel-heading">
+    <div><span class="step">01</span><h2>Tải file vào kho</h2></div>
+    <span class="live-tag">TXT / DOCX · 25 MB</span>
+  </div>
+  <form id="library-upload-form">
+    <label class="field-label" for="library-file">Chọn file cần lưu</label>
+    <input class="file-input" id="library-file" name="file" type="file" accept=".txt,.docx" required>
+    <button class="primary-button" id="library-upload-button" type="submit">↑ TẢI FILE LÊN KHO <span class="button-arrow">→</span></button>
+  </form>
+  <div class="panel-foot"><span id="library-upload-status">File chỉ admin mới có thể quản lý</span><span>LƯU TRỮ RIÊNG TƯ</span></div>
+</section>
+
+<section class="panel filter-panel standalone-filter-panel">
+  <div class="panel-heading">
+    <div><span class="step">02</span><h2>File đã lưu</h2></div>
+    <button class="small-action" id="library-refresh" type="button">↻ Làm mới</button>
+  </div>
+  <div class="stored-file-list" id="stored-file-list"><div class="empty-admin">Đang tải danh sách file...</div></div>
+  <div class="panel-foot"><span id="library-list-status">Đang kết nối kho file</span><span>SUPABASE STORAGE</span></div>
+</section>
+
+<section class="panel filter-panel standalone-filter-panel">
+  <div class="panel-heading">
+    <div><span class="step">03</span><h2>Tìm theo nội dung</h2></div>
+    <span class="live-tag">ĐIỀU KIỆN OR</span>
+  </div>
+  <p class="filter-intro">Chọn file đã lưu rồi nhập từ khóa. Nếu nhập nhiều trường SS, SSS hoặc SKIN, chỉ cần khớp một trường là tài khoản được lấy.</p>
+  <form id="stored-keyword-search-form">
+    <label class="field-label" for="stored-file-select">File dùng để tìm kiếm</label>
+    <select class="text-input stored-file-select" id="stored-file-select" required>
+      <option value="">— Chọn file trong kho —</option>
+    </select>
+    <div class="keyword-fields">
+      <label class="keyword-field"><span>SS</span><input class="text-input" id="stored-keyword-ss" type="text" placeholder="Nhập từ khóa SS..."></label>
+      <label class="keyword-field"><span>SSS</span><input class="text-input" id="stored-keyword-sss" type="text" placeholder="Nhập từ khóa SSS..."></label>
+      <label class="keyword-field"><span>SKIN</span><input class="text-input" id="stored-keyword-skin" type="text" placeholder="Nhập từ khóa SKIN..."></label>
+    </div>
+    <button class="primary-button" id="stored-keyword-search-button" type="submit">⌕ TÌM VÀ LẤY TK|MK <span class="button-arrow">→</span></button>
+  </form>
+  <div class="filter-output hidden" id="stored-keyword-output">
+    <div class="filter-summary" id="stored-keyword-summary"></div>
+    <pre id="stored-keyword-preview"></pre>
+    <button class="download-button" id="stored-keyword-download" type="button">↓ TẢI KẾT QUẢ TXT</button>
+  </div>
+  <div class="panel-foot"><span id="stored-keyword-status">Chưa tìm kiếm</span><span>CHỈ XUẤT TK|MK</span></div>
+</section>
+<section class="filter-help">
+  <span class="muted-label">BẢO MẬT</span>
+  <p>Trang này yêu cầu đăng nhập admin. File được lưu trong bucket private của Supabase; không công khai URL tải file. Không đặt SUPABASE_SERVICE_ROLE_KEY trong mã nguồn hoặc gửi khóa này trong chat.</p>
+</section>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}
