@@ -361,31 +361,40 @@ def search_filter():
 
     def is_account_start(line):
         candidate = line.strip()
-        if candidate.lower().startswith("in:"):
+        has_export_prefix = candidate.lower().startswith("in:")
+        if has_export_prefix:
             candidate = candidate[3:].strip()
-        first = candidate.split("|", 1)[0].strip()
-        if ":" in first:
-            user, password = first.split(":", 1)
-        else:
-            fields = candidate.split("|", 2)
-            if len(fields) < 2:
-                return False
-            user, password = fields[0], fields[1]
-        user, password = user.strip(), password.strip()
+
+        fields = candidate.split("|", 2)
+        if len(fields) < 2:
+            return False
+        user = fields[0].strip()
+        password = fields[1].strip()
+
         labels = {"NAME", "RANK", "LEVEL", "TƯỚNG", "TUONG", "SKIN", "QH",
                   "SS", "SSS", "ANIME", "OTHER", "EMAIL", "SDT", "SĐT",
-                  "IN", "RESULT", "FINAL"}
-        # Only accept account identifiers, never descriptive metadata rows.
+                  "IN", "RESULT", "FINAL", "AUTHEN", "CCCD", "CMND"}
+        if not user or not password or user.upper() in labels:
+            return False
+
+        # Account IDs are usually lowercase, contain digits, or use ID symbols.
+        # Reject title-case labels/metadata such as "Trang|Acc Full" and
+        # short numeric metadata rows such as "105|Skin: 237".
         valid_user = (
             len(user) >= 3
             and all(ch.isalnum() or ch in "._-@+" for ch in user)
-            and (any(ch.islower() for ch in user)
-                 or any(ch.isdigit() for ch in user)
-                 or any(ch in "._-@+" for ch in user))
+            and (
+                user.islower()
+                or any(ch.isdigit() for ch in user) and (not user.isdigit() or len(user) >= 8)
+                or any(ch in "._-@+" for ch in user)
+            )
         )
-        return (valid_user and bool(password)
-                and user.upper() not in labels
-                and not (user.isalpha() and user.isupper()))
+        valid_password = (
+            not any(ch.isspace() for ch in password)
+            and not password.endswith(":")
+            and password.split(":", 1)[0].upper() not in labels
+        )
+        return valid_user and valid_password
 
     for raw_line in source_text.splitlines():
         line = raw_line.strip().lstrip("\ufeff")
