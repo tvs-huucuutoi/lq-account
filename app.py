@@ -375,11 +375,17 @@ def search_filter():
         labels = {"NAME", "RANK", "LEVEL", "TƯỚNG", "TUONG", "SKIN", "QH",
                   "SS", "SSS", "ANIME", "OTHER", "EMAIL", "SDT", "SĐT",
                   "IN", "RESULT", "FINAL"}
-        return (len(user) >= 3 and bool(password)
+        # Only accept account identifiers, never descriptive metadata rows.
+        valid_user = (
+            len(user) >= 3
+            and all(ch.isalnum() or ch in "._-@+" for ch in user)
+            and (any(ch.islower() for ch in user)
+                 or any(ch.isdigit() for ch in user)
+                 or any(ch in "._-@+" for ch in user))
+        )
+        return (valid_user and bool(password)
                 and user.upper() not in labels
-                and not (user.isalpha() and user.isupper())
-                and (any(ch.islower() for ch in user) or any(ch.isdigit() for ch in user)
-                     or any(ch in "._-@+" for ch in user)))
+                and not (user.isalpha() and user.isupper()))
 
     for raw_line in source_text.splitlines():
         line = raw_line.strip().lstrip("\ufeff")
