@@ -5,6 +5,11 @@ import string
 import hmac
 import hashlib
 import re
+import json
+import uuid
+import urllib.request
+import urllib.error
+import urllib.parse
 from io import BytesIO
 from werkzeug.utils import secure_filename
 from docx import Document
@@ -78,9 +83,124 @@ def index():
 def filter_page():
     return render_template("filter.html")
 
+
+
+@app.get("/keyword-search")
+@admin_required
+def keyword_search_page():
+    return render_template("keyword_search.html")
+
+
+@app.get("/api/stored-files")
+@admin_required
+def stored_files():
+    try:
+        _, _, bucket = supabase_config()
+        payload = json.dumps({"prefix": "uploads", "limit": 1000, "offset": 0,
+                              "sortBy": {"column": "created_at", "order": "desc"}}).encode()
+        raw = supabase_request("POST", "/storage/v1/object/list/" + urllib.parse.quote(bucket, safe=""), payload)
+        objects = json.loads(raw.decode("utf-8"))
+        files = []
+        for item in objects if isinstance(objects, list) else []:
+            name = item.get("name", "")
+            if not name or name in (".", ".."):
+                continue
+            files.append({
+                "path": "uploads/" + name,
+                "name": item.get("metadata", {}).get("originalName") or name.split("_", 1)[-1],
+                "size": item.get("metadata", {}).get("size"),
+                "created_at": item.get("created_at") or item.get("updated_at") or ""
+            })
+        return jsonify({"files": files})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 503
+
+
+@app.post("/api/stored-files")
+@admin_required
+def upload_stored_file():
+    if not validate_csrf():
+        return jsonify({"error": "Phiên làm việc hết hạn. Hãy tải lại trang."}), 400
+    uploaded = request.files.get("file")
+    if not uploaded or not uploaded.filename:
+        return jsonify({"error": "Vui lòng chọn file TXT hoặc DOCX."}), 400
+    filename = secure_filename(uploaded.filename) or "uploaded-file"
+    extension = os.path.splitext(filename)[1].lower()
+    if extension not in {".txt", ".docx"}:
+        return jsonify({"error": "Chỉ hỗ trợ file .txt và .docx."}), 400
+    raw = uploaded.read(25 * 1024 * 1024 + 1)
+    if len(raw) > 25 * 1024 * 1024:
+        return jsonify({"error": "File vượt quá giới hạn 25 MB."}), 413
+    object_name = uuid.uuid4().hex + "_" + filename
+    object_path = "uploads/" + object_name
+    try:
+        _, _, bucket = supabase_config()
+        endpoint = storage_object_url(object_path)
+        supabase_request("POST", endpoint, raw, "text/plain" if extension == ".txt" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        return jsonify({"ok": True, "path": object_path, "name": filename, "size": len(raw)})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 503
+
+
+@app.delete("/api/stored-files")
+@admin_required
+def delete_stored_file():
+    if not validate_csrf():
+        return jsonify({"error": "Phiên làm việc hết hạn. Hãy tải lại trang."}), 400
+    data = request.get_json(silent=True) or {}
+    path = data.get("path", "")
+    if not isinstance(path, str) or not re.fullmatch(r"uploads/[A-Za-z0-9_.-]{1,220}", path):
+        return jsonify({"error": "Đường dẫn file không hợp lệ."}), 400
+    try:
+        _, _, bucket = supabase_config()
+        payload = json.dumps({"prefixes": [path]}).encode()
+        supabase_request("DELETE", "/storage/v1/object/" + urllib.parse.quote(bucket, safe=""), payload)
+        return jsonify({"ok": True})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 503
+
+
 @app.get("/api/csrf")
 def api_csrf():
     return jsonify({"csrf_token": csrf_token()})
+
+
+
+def supabase_config():
+    base_url = (os.environ.get("SUPABASE_URL") or "").rstrip("/")
+    service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or ""
+    bucket = os.environ.get("SUPABASE_BUCKET", "lq-account-files")
+    if not base_url or not service_key:
+        raise RuntimeError("Chưa cấu hình SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY trên Render.")
+    return base_url, service_key, bucket
+
+
+def supabase_request(method, endpoint, body=None, content_type="application/json"):
+    base_url, service_key, _ = supabase_config()
+    data = body
+    headers = {
+        "apikey": service_key,
+        "Authorization": "Bearer " + service_key,
+        "Accept": "application/json"
+    }
+    if data is not None:
+        headers["Content-Type"] = content_type
+    req = urllib.request.Request(base_url + endpoint, data=data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            return response.read()
+    except urllib.error.HTTPError as exc:
+        detail = exc.read(1200).decode("utf-8", "replace")
+        raise RuntimeError("Supabase trả lỗi " + str(exc.code) + ": " + detail)
+    except Exception as exc:
+        raise RuntimeError("Không kết nối được Supabase: " + str(exc))
+
+
+def storage_object_url(path):
+    _, _, bucket = supabase_config()
+    encoded_path = "/".join(urllib.parse.quote(part, safe="") for part in path.split("/"))
+    return "/storage/v1/object/" + urllib.parse.quote(bucket, safe="") + "/" + encoded_path
+
 
 def validate_csrf():
     supplied = request.headers.get("X-CSRF-Token", "") or request.form.get("_csrf", "")
@@ -196,18 +316,31 @@ def filter_file():
     if not validate_csrf():
         return jsonify({"error": "Phiên làm việc hết hạn. Hãy tải lại trang."}), 400
 
+    stored_path = (request.form.get("storage_path") or "").strip()
     uploaded = request.files.get("file")
-    if not uploaded or not uploaded.filename:
-        return jsonify({"error": "Vui lòng chọn file TXT hoặc DOCX."}), 400
-
-    filename = secure_filename(uploaded.filename) or "uploaded-file"
-    extension = os.path.splitext(filename)[1].lower()
-    if extension not in {".txt", ".docx"}:
-        return jsonify({"error": "Chỉ hỗ trợ file .txt và .docx."}), 400
-
-    raw = uploaded.read(10 * 1024 * 1024 + 1)
-    if len(raw) > 10 * 1024 * 1024:
-        return jsonify({"error": "File vượt quá giới hạn 10 MB."}), 413
+    if stored_path:
+        if not re.fullmatch(r"uploads/[A-Za-z0-9_.-]{1,220}", stored_path):
+            return jsonify({"error": "Đường dẫn file đã lưu không hợp lệ."}), 400
+        filename = (request.form.get("filename") or stored_path.split("/", 1)[-1]).strip()
+        extension = os.path.splitext(filename)[1].lower()
+        if extension not in {".txt", ".docx"}:
+            return jsonify({"error": "Chỉ hỗ trợ file TXT hoặc DOCX."}), 400
+        try:
+            raw = supabase_request("GET", storage_object_url(stored_path))
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 503
+        if len(raw) > 25 * 1024 * 1024:
+            return jsonify({"error": "File vượt quá giới hạn 25 MB."}), 413
+    else:
+        if not uploaded or not uploaded.filename:
+            return jsonify({"error": "Vui lòng chọn file TXT hoặc DOCX."}), 400
+        filename = secure_filename(uploaded.filename) or "uploaded-file"
+        extension = os.path.splitext(filename)[1].lower()
+        if extension not in {".txt", ".docx"}:
+            return jsonify({"error": "Chỉ hỗ trợ file .txt và .docx."}), 400
+        raw = uploaded.read(25 * 1024 * 1024 + 1)
+        if len(raw) > 25 * 1024 * 1024:
+            return jsonify({"error": "File vượt quá giới hạn 25 MB."}), 413
 
     try:
         if extension == ".txt":
