@@ -222,3 +222,216 @@
     URL.revokeObjectURL(url);
   });
 })();
+
+
+(() => {
+  const uploadForm = document.getElementById("library-upload-form");
+  if (!uploadForm) return;
+
+  const fileInput = document.getElementById("library-file");
+  const uploadButton = document.getElementById("library-upload-button");
+  const uploadStatus = document.getElementById("library-upload-status");
+  const listNode = document.getElementById("stored-file-list");
+  const listStatus = document.getElementById("library-list-status");
+  const refreshButton = document.getElementById("library-refresh");
+  const select = document.getElementById("stored-file-select");
+  const searchForm = document.getElementById("stored-keyword-search-form");
+  const searchButton = document.getElementById("stored-keyword-search-button");
+  const searchStatus = document.getElementById("stored-keyword-status");
+  const output = document.getElementById("stored-keyword-output");
+  const summary = document.getElementById("stored-keyword-summary");
+  const preview = document.getElementById("stored-keyword-preview");
+  const download = document.getElementById("stored-keyword-download");
+  let files = [];
+  let matches = [];
+
+  async function csrfToken() {
+    const response = await fetch("/api/csrf");
+    const data = await response.json();
+    if (!response.ok || !data.csrf_token) throw new Error("Không lấy được mã bảo mật. Hãy tải lại trang.");
+    return data.csrf_token;
+  }
+
+  function humanSize(bytes) {
+    if (bytes === null || bytes === undefined || bytes === "") return "Dung lượng không rõ";
+    const value = Number(bytes);
+    return value < 1024 * 1024 ? (value / 1024).toFixed(1) + " KB" : (value / 1024 / 1024).toFixed(2) + " MB";
+  }
+
+  async function loadFiles() {
+    listStatus.textContent = "Đang tải danh sách...";
+    listNode.replaceChildren();
+    try {
+      const response = await fetch("/api/stored-files");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Không thể tải danh sách file.");
+      files = data.files || [];
+      select.replaceChildren();
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "— Chọn file trong kho —";
+      select.appendChild(placeholder);
+
+      if (!files.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-admin";
+        empty.textContent = "Kho chưa có file nào. Hãy tải file TXT hoặc DOCX lên ở mục 01.";
+        listNode.appendChild(empty);
+      }
+
+      files.forEach((file) => {
+        const option = document.createElement("option");
+        option.value = file.path;
+        option.textContent = file.name;
+        option.dataset.filename = file.name;
+        select.appendChild(option);
+
+        const row = document.createElement("div");
+        row.className = "stored-file-row";
+        const info = document.createElement("div");
+        info.className = "stored-file-info";
+        const name = document.createElement("strong");
+        name.textContent = file.name;
+        const meta = document.createElement("span");
+        meta.textContent = humanSize(file.size);
+        info.append(name, meta);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "small-action danger-action";
+        remove.textContent = "Xóa";
+        remove.addEventListener("click", async () => {
+          if (!confirm("Xóa file " + file.name + " khỏi kho lưu trữ?")) return;
+          remove.disabled = true;
+          try {
+            const token = await csrfToken();
+            const deleted = await fetch("/api/stored-files", {
+              method: "DELETE",
+              headers: {"Content-Type": "application/json", "X-CSRF-Token": token},
+              body: JSON.stringify({path: file.path})
+            });
+            const result = await deleted.json();
+            if (!deleted.ok) throw new Error(result.error || "Không thể xóa file.");
+            if (select.value === file.path) select.value = "";
+            await loadFiles();
+            listStatus.textContent = "Đã xóa file khỏi kho.";
+          } catch (error) {
+            alert(error.message);
+            remove.disabled = false;
+          }
+        });
+        row.append(info, remove);
+        listNode.appendChild(row);
+      });
+      listStatus.textContent = files.length + " file đang được lưu.";
+    } catch (error) {
+      listStatus.textContent = error.message;
+      const warning = document.createElement("div");
+      warning.className = "error-box";
+      warning.textContent = error.message;
+      listNode.appendChild(warning);
+    }
+  }
+
+  uploadForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (!["txt", "docx"].includes(extension)) {
+      uploadStatus.textContent = "Chỉ hỗ trợ TXT hoặc DOCX.";
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      uploadStatus.textContent = "File vượt quá giới hạn 25 MB.";
+      return;
+    }
+    uploadButton.disabled = true;
+    uploadButton.textContent = "ĐANG TẢI LÊN...";
+    uploadStatus.textContent = "Đang lưu file vào Supabase...";
+    try {
+      const token = await csrfToken();
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/stored-files", {
+        method: "POST",
+        headers: {"X-CSRF-Token": token},
+        body: formData
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Không thể lưu file.");
+      fileInput.value = "";
+      uploadStatus.textContent = "Đã lưu " + data.name + " thành công.";
+      await loadFiles();
+      select.value = data.path;
+    } catch (error) {
+      uploadStatus.textContent = error.message;
+      alert(error.message);
+    } finally {
+      uploadButton.disabled = false;
+      uploadButton.innerHTML = '↑ TẢI FILE LÊN KHO <span class="button-arrow">→</span>';
+    }
+  });
+
+  refreshButton.addEventListener("click", loadFiles);
+
+  searchForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const path = select.value;
+    const selected = select.options[select.selectedIndex];
+    if (!path) {
+      searchStatus.textContent = "Hãy chọn một file đã lưu.";
+      return;
+    }
+    const keywords = {
+      ss: document.getElementById("stored-keyword-ss").value.trim(),
+      sss: document.getElementById("stored-keyword-sss").value.trim(),
+      skin: document.getElementById("stored-keyword-skin").value.trim()
+    };
+    if (!keywords.ss && !keywords.sss && !keywords.skin) {
+      searchStatus.textContent = "Hãy nhập ít nhất một từ khóa.";
+      return;
+    }
+    searchButton.disabled = true;
+    searchButton.textContent = "ĐANG TÌM KIẾM...";
+    searchStatus.textContent = "Đang quét file đã lưu...";
+    const formData = new FormData();
+    formData.append("storage_path", path);
+    formData.append("filename", selected.dataset.filename || selected.textContent);
+    Object.entries(keywords).forEach(([key, value]) => formData.append(key, value));
+    try {
+      const token = await csrfToken();
+      const response = await fetch("/api/search-filter", {
+        method: "POST",
+        headers: {"X-CSRF-Token": token},
+        body: formData
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Không thể tìm kiếm file.");
+      matches = data.results || [];
+      preview.textContent = matches.slice(0, 100).join("\n") +
+        (matches.length > 100 ? "\n… (còn " + (matches.length - 100).toLocaleString("vi-VN") + " dòng)" : "");
+      summary.textContent = "Tìm thấy " + data.count.toLocaleString("vi-VN") + " tài khoản khớp • Điều kiện OR.";
+      output.classList.remove("hidden");
+      searchStatus.textContent = matches.length ? "Tìm kiếm hoàn tất." : "Không tìm thấy tài khoản khớp.";
+    } catch (error) {
+      searchStatus.textContent = error.message;
+      alert(error.message);
+    } finally {
+      searchButton.disabled = false;
+      searchButton.innerHTML = '⌕ TÌM VÀ LẤY TK|MK <span class="button-arrow">→</span>';
+    }
+  });
+
+  download.addEventListener("click", () => {
+    if (!matches.length) return;
+    const blob = new Blob(["\uFEFF" + matches.join("\n") + "\n"], {type: "text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "lq-account-keyword-results.txt";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  });
+
+  loadFiles();
+})();
