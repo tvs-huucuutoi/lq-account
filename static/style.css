@@ -59,3 +59,11 @@ footer{border-top:1px solid #ffffff10;text-align:center;padding:20px;color:#5967
 /* Expanded filter preview: show more extracted account pairs at once. */
 .filter-output pre{height:440px;max-height:60vh;min-height:300px;line-height:1.75}
 
+
+
+.keyword-search-panel{margin-top:18px}
+.keyword-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+.keyword-field{display:flex;flex-direction:column;gap:8px;color:#b6c2d5;font-size:11px;font-weight:700}
+.keyword-field span{letter-spacing:.08em;color:#8eabff}
+.keyword-field .text-input{min-width:0}
+@media(max-width:600px){.keyword-fields{grid-template-columns:1fr}}
