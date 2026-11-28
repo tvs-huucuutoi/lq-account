@@ -4,6 +4,7 @@ import secrets
 import string
 import hmac
 import hashlib
+import re
 from io import BytesIO
 from werkzeug.utils import secure_filename
 from docx import Document
@@ -302,6 +303,132 @@ def filter_file():
         "count": len(extracted),
         "skipped": skipped,
         "status": status
+    })
+
+
+
+
+@app.post("/api/search-filter")
+def search_filter():
+    if not validate_csrf():
+        return jsonify({"error": "Phiên làm việc hết hạn. Hãy tải lại trang."}), 400
+
+    uploaded = request.files.get("file")
+    if not uploaded or not uploaded.filename:
+        return jsonify({"error": "Vui lòng chọn file TXT hoặc DOCX."}), 400
+
+    filename = secure_filename(uploaded.filename) or "uploaded-file"
+    extension = os.path.splitext(filename)[1].lower()
+    if extension not in {".txt", ".docx"}:
+        return jsonify({"error": "Chỉ hỗ trợ file .txt và .docx."}), 400
+
+    raw = uploaded.read(10 * 1024 * 1024 + 1)
+    if len(raw) > 10 * 1024 * 1024:
+        return jsonify({"error": "File vượt quá giới hạn 10 MB."}), 413
+
+    try:
+        if extension == ".txt":
+            try:
+                source_text = raw.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                try:
+                    source_text = raw.decode("cp1258")
+                except UnicodeDecodeError:
+                    source_text = raw.decode("latin-1")
+        else:
+            document = Document(BytesIO(raw))
+            parts = [p.text for p in document.paragraphs if p.text.strip()]
+            for table in document.tables:
+                for row in table.rows:
+                    parts.append(" | ".join(cell.text for cell in row.cells))
+            source_text = "\n".join(parts)
+    except Exception:
+        return jsonify({"error": "Không thể đọc nội dung file TXT/DOCX."}), 400
+
+    keywords = {
+        "SS": (request.form.get("ss") or "").strip(),
+        "SSS": (request.form.get("sss") or "").strip(),
+        "SKIN": (request.form.get("skin") or "").strip(),
+    }
+    active = {label: value.casefold() for label, value in keywords.items() if value}
+    if not active:
+        return jsonify({"error": "Hãy nhập ít nhất một từ khóa SS, SSS hoặc SKIN."}), 400
+
+    # Split the document into account sections. "In:" is the common export
+    # prefix; plain account|password rows are also accepted as section starts.
+    sections = []
+    current = []
+
+    def is_account_start(line):
+        candidate = line.strip()
+        if candidate.lower().startswith("in:"):
+            candidate = candidate[3:].strip()
+        first = candidate.split("|", 1)[0].strip()
+        if ":" in first:
+            user, password = first.split(":", 1)
+        else:
+            fields = candidate.split("|", 2)
+            if len(fields) < 2:
+                return False
+            user, password = fields[0], fields[1]
+        user, password = user.strip(), password.strip()
+        labels = {"NAME", "RANK", "LEVEL", "TƯỚNG", "TUONG", "SKIN", "QH",
+                  "SS", "SSS", "ANIME", "OTHER", "EMAIL", "SDT", "SĐT",
+                  "IN", "RESULT", "FINAL"}
+        return (len(user) >= 3 and bool(password)
+                and user.upper() not in labels
+                and not (user.isalpha() and user.isupper())
+                and (any(ch.islower() for ch in user) or any(ch.isdigit() for ch in user)
+                     or any(ch in "._-@+" for ch in user)))
+
+    for raw_line in source_text.splitlines():
+        line = raw_line.strip().lstrip("\ufeff")
+        if not line:
+            continue
+        if is_account_start(line):
+            if current:
+                sections.append(current)
+            current = [line]
+        elif current:
+            current.append(line)
+    if current:
+        sections.append(current)
+
+    results = []
+    for section in sections:
+        block = "\n".join(section)
+        found_labels = {}
+        for label in active:
+            # Match a complete metadata label (SS does not match SSS).
+            pattern = rf"(?i)(?:^|[|,\s]){label}\s*:\s*([^|\r\n,]+)"
+            values = [m.group(1).strip().casefold() for m in re.finditer(pattern, block)]
+            found_labels[label] = any(active[label] in value for value in values)
+
+        # OR logic: one matching entered field is enough.
+        if not any(found_labels.values()):
+            continue
+
+        first = section[0]
+        if first.lower().startswith("in:"):
+            first = first[3:].strip()
+        first_field = first.split("|", 1)[0].strip()
+        if ":" in first_field:
+            username, password = first_field.split(":", 1)
+        else:
+            fields = first.split("|", 2)
+            if len(fields) < 2:
+                continue
+            username, password = fields[0], fields[1]
+        pair = username.strip() + "|" + password.strip()
+        if pair not in results:
+            results.append(pair)
+
+    return jsonify({
+        "filename": filename,
+        "results": results,
+        "count": len(results),
+        "keywords": keywords,
+        "match_mode": "OR"
     })
 
 
